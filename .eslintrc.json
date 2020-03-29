@@ -1,0 +1,49 @@
+{
+  "overrides": [
+    {
+      "files": [
+        "src/**"
+      ]
+    }
+  ],
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true
+  },
+  "extends": [
+    "google"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly",
+    "_": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "rules": {
+    "semi": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "linebreak-style": "off",
+    "curly": "error",
+    "indent": [
+      "error",
+      2
+    ],
+    "no-trailing-spaces": "error",
+    "max-len": "off",
+    "require-jsdoc": "off",
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "guard-for-in": "off"
+  }
+}
