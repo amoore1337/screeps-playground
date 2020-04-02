@@ -1,3 +1,7 @@
+const { totalEnergyCapacity } = require('helpers_spawnManager');
+const { creepRoleEnergyCapacity } = require('helpers_creepManager');
+
+// Harvest energy and deliver to spawn in room.
 
 const harvester = {
   run: (creep) => {
@@ -24,7 +28,7 @@ const harvester = {
         if (transferResult == ERR_NOT_IN_RANGE) {
           creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
         } else if (creep.memory.tripStartTime) {
-          recordHarvestTripTime(Game.time - creep.memory.tripStartTime);
+          recordHarvestTripTime(creep.room.find(FIND_MY_SPAWNS)[0], Game.time - creep.memory.tripStartTime);
           creep.memory.tripStartTime = '';
         }
       } else {
@@ -36,9 +40,9 @@ const harvester = {
   },
 };
 
-function recordHarvestTripTime(lastTripTime) {
+function recordHarvestTripTime(spawn, lastTripTime) {
   let previousTrips = Memory.harvestTripTracking && Memory.harvestTripTracking.previousTrips || [];
-  if (previousTrips.length < 5) {
+  if (previousTrips.length < 10) {
     previousTrips.push(lastTripTime);
   } else {
     previousTrips = previousTrips.slice(1, -1);
@@ -46,8 +50,10 @@ function recordHarvestTripTime(lastTripTime) {
   }
 
   const averageTripTime = Math.floor(previousTrips.reduce((a, b) => a + b, 0) / previousTrips.length);
+  const energyPerTick = creepRoleEnergyCapacity(spawn.room, 'harvester') / averageTripTime;
+  const fillEnergyTime = totalEnergyCapacity(spawn) / energyPerTick;
 
-  Memory.harvestTripTracking = { previousTrips, averageTripTime };
+  Memory.harvestTripTracking = { previousTrips, averageTripTime, energyPerTick, fillEnergyTime };
 }
 
 module.exports = harvester;

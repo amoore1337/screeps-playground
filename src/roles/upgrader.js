@@ -1,3 +1,5 @@
+// Upgrade controller in room.
+
 const upgrader = {
   run: (creep) => {
     if (creep.memory.upgrading && creep.store[RESOURCE_ENERGY] === 0) {

@@ -1,3 +1,5 @@
+// Build any available construction sites in room.
+
 const builder = {
   run: (creep) => {
     if (creep.memory.building && creep.store[RESOURCE_ENERGY] === 0) {
