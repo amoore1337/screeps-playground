@@ -1,6 +1,6 @@
-// Upgrade controller in room.
+// Tend to Towers in the room.
 
-const upgrader = {
+const squire = {
   run: (creep) => {
     if (creep.memory.refueling && creep.store[RESOURCE_ENERGY] === 0) {
       creep.memory.refueling = false;
@@ -35,4 +35,4 @@ const upgrader = {
   },
 };
 
-module.exports = upgrader;
+module.exports = squire;
