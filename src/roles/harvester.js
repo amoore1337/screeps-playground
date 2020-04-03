@@ -10,9 +10,18 @@ const harvester = {
     }
 
     if (creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-      const sources = _.filter(creep.room.find(FIND_SOURCES), (s) => s.energy > 0);
-      if (creep.harvest(sources[0]) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(sources[0], { visualizePathStyle: { stroke: '#ffaa00' } });
+      const tombstones = _.filter(creep.room.find(FIND_TOMBSTONES), (t) => t.store[RESOURCE_ENERGY]);
+      const tombstone = tombstones.length && tombstones[0];
+      if (tombstone) {
+        if (creep.withdraw(tombstone) === ERR_NOT_IN_RANGE) {
+          creep.moveTo(tombstone, { visualizePathStyle: { stroke: '#ffaa00' } });
+        }
+      } else {
+        const sources = _.filter(creep.room.find(FIND_SOURCES), (s) => s.energy > 0);
+        const target = creep.pos.findClosestByPath(sources);
+        if (creep.harvest(target) === ERR_NOT_IN_RANGE) {
+          creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
+        }
       }
     } else {
       const targets = creep.room.find(FIND_STRUCTURES, {
@@ -42,7 +51,7 @@ const harvester = {
 
 function recordHarvestTripTime(spawn, lastTripTime) {
   let previousTrips = Memory.harvestTripTracking && Memory.harvestTripTracking.previousTrips || [];
-  if (previousTrips.length < 10) {
+  if (previousTrips.length < 11) {
     previousTrips.push(lastTripTime);
   } else {
     previousTrips = previousTrips.slice(1, -1);
@@ -53,7 +62,7 @@ function recordHarvestTripTime(spawn, lastTripTime) {
   const energyPerTick = creepRoleEnergyCapacity(spawn.room, 'harvester') / averageTripTime;
   const fillEnergyTime = totalEnergyCapacity(spawn) / energyPerTick;
 
-  Memory.harvestTripTracking = { previousTrips, averageTripTime, energyPerTick, fillEnergyTime };
+  spawn.memory.harvestTripTracking = { previousTrips, averageTripTime, energyPerTick, fillEnergyTime };
 }
 
 module.exports = harvester;

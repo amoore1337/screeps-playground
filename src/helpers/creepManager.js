@@ -1,9 +1,11 @@
-const { spawns, spawnBasicWorker, spawnHarvester } = require('./helpers_spawnManager');
+const { spawns, spawnWorker, spawnBasicWorker, spawnHarvester } = require('./helpers_spawnManager');
 
 const CREEP_REQS = {
-  harvester: 2,
+  harvester: 3,
   upgrader: 3,
   builder: 2,
+  paver: 2,
+  squire: 1,
 };
 
 const manager = {
@@ -29,11 +31,15 @@ const manager = {
           continue;
         }
 
+        if (role === 'squire' && !shouldSpawnSquire(spawn.room)) {
+          continue;
+        }
+
         if (creepCountMap(spawn.room)[role] < CREEP_REQS[role]) {
           if (role === 'harvester') {
             spawnHarvester({}, spawn);
           } else {
-            spawnBasicWorker(role, {}, spawn);
+            spawnWorker(role, {}, spawn);
           }
           break;
         }
@@ -52,11 +58,22 @@ function buildQueue(room) {
   return room.find(FIND_MY_CONSTRUCTION_SITES);
 }
 
+function shouldSpawnSquire(room) {
+  const notProvisionedTowers = _.filter(
+    room.find(FIND_STRUCTURES),
+    (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY),
+  );
+
+  return notProvisionedTowers.length > 0;
+}
+
 function creepCountMap(room) {
   return {
     harvester: creepCounter(room, 'harvester'),
     upgrader: creepCounter(room, 'upgrader'),
     builder: creepCounter(room, 'builder'),
+    squire: creepCounter(room, 'squire'),
+    paver: creepCounter(room, 'paver'),
   };
 }
 

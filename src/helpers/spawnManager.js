@@ -4,8 +4,11 @@ const manager = {
   spawnBasicWorker: (role, mem, spawnIn) => {
     spawn([WORK, CARRY, MOVE], role, mem, spawnIn);
   },
+  spawnWorker: (role, mem, spawnIn) => {
+    spawn([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], role, mem, spawnIn);
+  },
   spawnHarvester: (mem, spawnIn) => {
-    spawn([WORK, CARRY, CARRY, MOVE, MOVE], 'harvester', mem, spawnIn);
+    spawn([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], 'harvester', mem, spawnIn);
   },
 };
 

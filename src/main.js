@@ -4,6 +4,11 @@ const { respawnMissing } = require('helpers_creepManager');
 const harvester = require('roles_harvester');
 const upgrader = require('roles_upgrader');
 const builder = require('roles_builder');
+const squire = require('roles_squire');
+const paver = require('roles_paver');
+
+
+const tower = require('roles_tower');
 
 module.exports.loop = function() {
   for (const name in Memory.creeps) {
@@ -16,10 +21,18 @@ module.exports.loop = function() {
   printCreepStats();
   respawnMissing();
 
-  move();
+  moveTowers();
+  moveCreeps();
 };
 
-function move() {
+function moveTowers() {
+  const towers = _.filter(Game.structures, (s) => s.sourceType === STRUCTURE_TOWER);
+  for (const t in towers) {
+    tower.run(t);
+  }
+}
+
+function moveCreeps() {
   for (const name in Game.creeps) {
     const creep = Game.creeps[name];
     if (creep.memory.role === 'harvester') {
@@ -28,6 +41,10 @@ function move() {
       upgrader.run(creep);
     } else if (creep.memory.role === 'builder') {
       builder.run(creep);
+    } else if (creep.memory.role === 'paver') {
+      paver.run(creep);
+    } else if (creep.memory.role === 'squire') {
+      squire.run(creep);
     }
   }
 }
