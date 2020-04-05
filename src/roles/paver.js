@@ -26,9 +26,7 @@ const paver = {
     } else {
       let targets = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
       targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
-      if (!targets.length) {
-        targets = creep.room.find(FIND_SOURCES);
-      }
+
       const target = creep.pos.findClosestByPath(targets);
       if (target && target.energy && creep.harvest(target) == ERR_NOT_IN_RANGE) {
         creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
@@ -39,10 +37,10 @@ const paver = {
   },
 
   prioritizedTargets: (creep) => {
-    // Prioritize any containers with > 25% decay:
+    // Prioritize any containers with > 20% decay:
     const containers = _.filter(
       creep.room.find(FIND_STRUCTURES),
-      (s) => s.structureType === STRUCTURE_CONTAINER && (s.hits / s.hitsMax) > .75,
+      (s) => s.structureType === STRUCTURE_CONTAINER && (s.hits / s.hitsMax) < .8,
     );
 
     if (containers.length) {
