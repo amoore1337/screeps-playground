@@ -35,7 +35,9 @@ function spawn(body, role, mem, spawnIn) {
     memory = _.merge(memory, mem);
   }
 
-  return spawnIn.spawnCreep(body, creepName(role), { memory });
+  if (spawnIn.spawnCreep(body, creepName(role), { memory }) === OK) {
+    console.log('Spawning ', role);
+  }
 }
 
 function spawnNames() {

@@ -12,8 +12,9 @@ const harvester = {
     if (creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
       const tombstones = _.filter(creep.room.find(FIND_TOMBSTONES), (t) => t.store[RESOURCE_ENERGY]);
       const tombstone = tombstones.length && tombstones[0];
+
       if (tombstone) {
-        if (creep.withdraw(tombstone) === ERR_NOT_IN_RANGE) {
+        if (creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
           creep.moveTo(tombstone, { visualizePathStyle: { stroke: '#ffaa00' } });
         }
       } else {
