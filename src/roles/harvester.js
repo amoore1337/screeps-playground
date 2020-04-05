@@ -1,4 +1,3 @@
-const { totalEnergyCapacity } = require('helpers_spawnManager');
 const { creepRoleEnergyCapacity } = require('helpers_creepManager');
 
 // Harvest energy and deliver to spawn in room.
@@ -61,7 +60,7 @@ function recordHarvestTripTime(spawn, lastTripTime) {
 
   const averageTripTime = Math.floor(previousTrips.reduce((a, b) => a + b, 0) / previousTrips.length);
   const energyPerTick = creepRoleEnergyCapacity(spawn.room, 'harvester') / averageTripTime;
-  const fillEnergyTime = totalEnergyCapacity(spawn) / energyPerTick;
+  const fillEnergyTime = spawn.getTotalEnergyCapacity / energyPerTick;
 
   spawn.memory.harvestTripTracking = { previousTrips, averageTripTime, energyPerTick, fillEnergyTime };
 }

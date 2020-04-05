@@ -21,7 +21,7 @@ function totalEnergyCapacity(spawn) {
 }
 
 function creepName(role) {
-  return 'creep_' + role.split('')[0] + Game.time;
+  return 'creep_' + role + Game.time;
 }
 
 function spawn(body, role, mem, spawnIn) {

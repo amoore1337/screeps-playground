@@ -20,6 +20,22 @@ const utils = {
       });
     }
   },
+
+  cleanupDeceasedCreeps: () => {
+    for (const name in Memory.creeps) {
+      if (!Game.creeps[name]) {
+        // If the deceased creep was targeting something, un-target it.
+        const creepMem = Memory.creeps[name];
+        if (Memory[`${creepMem.role}Targets`]) {
+          delete Memory[`${creepMem.role}Targets`][name];
+        }
+
+        delete Memory.creeps[name];
+
+        console.log('Cleared non-existing creep memory:', name);
+      }
+    }
+  },
 };
 
 module.exports = utils;
