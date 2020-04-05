@@ -1,3 +1,4 @@
+const targetManager = require('helpers_targetManager');
 // Tend to Towers in the room.
 
 const squire = {
@@ -59,7 +60,9 @@ function currentTarget(creep) {
 
 function updateTarget(creep) {
   if (!creep.memory.target || !creep.memory.target.id || creep.memory.target.tripCount > 2) {
+    const previousTargetId = creep.memory.target && creep.memory.target.id;
     const nextTarget = findNextTarget(creep.room);
+    targetManager.updateTarget('squire', previousTargetId, nextTarget && nextTarget.id);
     creep.memory.target = nextTarget ? {
       tripCount: 1,
       id: nextTarget.id,

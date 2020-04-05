@@ -52,7 +52,7 @@ function updateTarget(creep) {
   if (!creep.memory.target || !creep.memory.target.id || creep.memory.target.tripCount > 2) {
     const previousTargetId = creep.memory.target && creep.memory.target.id;
     const nextTarget = findNextTarget(creep.room);
-    targetManager.updateTarget('paver', previousTargetId, nextTarget.id);
+    targetManager.updateTarget('paver', previousTargetId, nextTarget && nextTarget.id);
     if (nextTarget) {
       creep.memory.target = {
         tripCount: 1,
@@ -71,7 +71,7 @@ function updateTarget(creep) {
 function findNextTarget(room) {
   const roads = _.filter(room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_ROAD && s.hitsMax > s.hits);
   const targets = _.sortBy(roads, (r) => (r.hits / r.hitsMax));
-  return targets.length && targets[0];
+  return targetManager.findFirstUnique('paver', targets);
 }
 
 module.exports = paver;
