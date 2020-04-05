@@ -1,6 +1,5 @@
 const manager = {
   spawns: spawnNames,
-  totalEnergyCapacity: totalEnergyCapacity,
   spawnBasicWorker: (role, mem, spawnIn) => {
     spawn([WORK, CARRY, MOVE], role, mem, spawnIn);
   },
@@ -10,15 +9,10 @@ const manager = {
   spawnHarvester: (mem, spawnIn) => {
     spawn([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], 'harvester', mem, spawnIn);
   },
+  spawnMiner: (mem, spawnIn) => {
+    spawn([WORK, WORK, WORK, WORK, WORK, MOVE], 'miner', mem, spawnIn);
+  },
 };
-
-function totalEnergyCapacity(spawn) {
-  const spawnCapacity = spawn.store.getCapacity(RESOURCE_ENERGY);
-  const extensions = _.filter(spawn.room.find(FIND_MY_STRUCTURES), (s) => s.structureType === STRUCTURE_EXTENSION);
-  const extensionCapacity = _.reduce(extensions, (sum, ex) => sum + ex.store.getCapacity(RESOURCE_ENERGY), 0);
-
-  return spawnCapacity + extensionCapacity;
-}
 
 function creepName(role) {
   return 'creep_' + role + Game.time;

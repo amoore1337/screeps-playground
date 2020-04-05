@@ -1,4 +1,4 @@
-const { spawns, spawnWorker, spawnBasicWorker, spawnHarvester } = require('./helpers_spawnManager');
+const { spawns, spawnWorker, spawnBasicWorker, spawnHarvester, spawnMiner } = require('./helpers_spawnManager');
 
 const CREEP_REQS = {
   harvester: 3,
@@ -10,7 +10,6 @@ const CREEP_REQS = {
 
 const manager = {
   creepCountMap: creepCountMap,
-  creepRoleEnergyCapacity: creepRoleEnergyCapacity,
   respawnMissing: () => {
     spawns().forEach((spawnName) => {
       const spawn = Game.spawns[spawnName];
@@ -23,6 +22,10 @@ const manager = {
       if (creepCountMap(spawn.room)['harvester'] === 0) {
         spawnBasicWorker('harvester', {}, spawn);
         return;
+      }
+
+      if (missingMiners(spawn.room)) {
+        spawnMiner({}, spawn);
       }
 
       for (let i = 0; i < _.keys(CREEP_REQS).length; i++) {
@@ -44,14 +47,13 @@ const manager = {
   },
 };
 
-function creepRoleEnergyCapacity(room, role) {
-  const creeps = _.filter(room.find(FIND_MY_CREEPS), (creep) => creep.memory.role === role);
-  const totalCapacity = _.reduce(creeps, (sum, c) => sum + c.store.getCapacity(RESOURCE_ENERGY), 0);
-  return totalCapacity;
-}
-
 function buildQueue(room) {
   return room.find(FIND_MY_CONSTRUCTION_SITES);
+}
+
+function missingMiners(room) {
+  const containers = _.filter(room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
+  return containers.length > creepCountMap(room).miner;
 }
 
 function creepCountMap(room) {
@@ -61,6 +63,7 @@ function creepCountMap(room) {
     builder: creepCounter(room, 'builder'),
     squire: creepCounter(room, 'squire'),
     paver: creepCounter(room, 'paver'),
+    miner: creepCounter(room, 'miner'),
   };
 }
 

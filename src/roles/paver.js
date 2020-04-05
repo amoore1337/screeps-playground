@@ -1,4 +1,4 @@
-// Repair roads in room.
+// Repair roads and containers in room.
 
 const paver = {
   run: (creep) => {
@@ -24,15 +24,31 @@ const paver = {
         creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
       }
     } else {
-      const sources = creep.room.find(FIND_SOURCES);
-      const target = creep.pos.findClosestByPath(sources);
-      if (creep.harvest(target) == ERR_NOT_IN_RANGE) {
+      let targets = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
+      targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
+      if (!targets.length) {
+        targets = creep.room.find(FIND_SOURCES);
+      }
+      const target = creep.pos.findClosestByPath(targets);
+      if (target && target.energy && creep.harvest(target) == ERR_NOT_IN_RANGE) {
+        creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
+      } else if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
         creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
       }
     }
   },
 
   prioritizedTargets: (creep) => {
+    // Prioritize any containers with > 25% decay:
+    const containers = _.filter(
+      creep.room.find(FIND_STRUCTURES),
+      (s) => s.structureType === STRUCTURE_CONTAINER && (s.hits / s.hitsMax) > .75,
+    );
+
+    if (containers.length) {
+      return _.sortBy(containers, (r) => (r.hits / r.hitsMax));
+    }
+
     const roads = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_ROAD && s.hitsMax > s.hits);
     return _.sortBy(roads, (r) => (r.hits / r.hitsMax));
   },

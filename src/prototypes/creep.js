@@ -1,6 +1,7 @@
 const roles = {
   builder: require('roles_builder'),
   harvester: require('roles_harvester'),
+  miner: require('roles_miner'),
   paver: require('roles_paver'),
   squire: require('roles_squire'),
   upgrader: require('roles_upgrader'),
