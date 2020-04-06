@@ -19,6 +19,15 @@ const harvester = {
         let targets = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
         targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
 
+        // Look for a Storage structure:
+        if (!targets.length) {
+          targets = _.filter(
+            creep.room.find(FIND_STRUCTURES),
+            (s) => s.structureType === STRUCTURE_STORAGE && s.store.getFreeCapacity(),
+          );
+        }
+
+        // Fall back to energy deposits:
         if (!targets.length) {
           targets = _.filter(creep.room.find(FIND_SOURCES), (s) => s.energy > 0);
         }
@@ -34,9 +43,13 @@ const harvester = {
       const targets = creep.room.find(FIND_STRUCTURES, {
         filter: (structure) => {
           return (
+            structure.structureType == STRUCTURE_STORAGE ||
             structure.structureType == STRUCTURE_EXTENSION ||
             structure.structureType == STRUCTURE_SPAWN
-          ) && structure.energy < structure.energyCapacity;
+          ) && (
+            (!structure.storage && structure.energy < structure.energyCapacity) ||
+            (structure.storage && structure.storage.getFreeCapacity())
+          );
         },
       });
       if (targets.length > 0) {
