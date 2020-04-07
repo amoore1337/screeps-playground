@@ -1,7 +1,7 @@
 StructureTower.prototype.defend = function() {
-  const enemies = tower.room.find(FIND_HOSTILE_CREEPS);
+  const enemies = this.room.find(FIND_HOSTILE_CREEPS);
   if (enemies.length) {
-    const target = tower.pos.findClosestByRange(enemies);
-    tower.attack(target);
+    const target = this.pos.findClosestByRange(enemies);
+    this.attack(target);
   }
 };

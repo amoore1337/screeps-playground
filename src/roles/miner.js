@@ -6,7 +6,7 @@ const miner = {
     }
 
 
-    if (creep.pos.isEqualTo(target.pos)) {
+    if (target && creep.pos.isEqualTo(target.pos)) {
       const source = creep.pos.findInRange(FIND_SOURCES, 1)[0];
       creep.harvest(source);
     } else {

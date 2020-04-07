@@ -5,10 +5,38 @@ const roles = {
   paver: require('roles_paver'),
   squire: require('roles_squire'),
   upgrader: require('roles_upgrader'),
+  defender: require('roles_defender'),
 };
 
 Creep.prototype.runRole = function() {
   roles[this.memory.role].run(this);
+};
+
+Creep.prototype.fetchEnergy = function() {
+  // Try to fill up from container if available:
+  let targets = _.filter(this.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
+  targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
+
+  // Look for a Storage structure:
+  if (!targets.length) {
+    targets = _.filter(
+      this.room.find(FIND_STRUCTURES),
+      (s) => s.structureType === STRUCTURE_STORAGE && s.store[RESOURCE_ENERGY],
+    );
+  }
+
+  // Fall back to energy deposits:
+  const canHarvest = _.some(this.body, { type: WORK });
+  if (!targets.length && canHarvest) {
+    targets = _.filter(this.room.find(FIND_SOURCES), (s) => s.energy > 0);
+  }
+
+  const target = this.pos.findClosestByPath(targets);
+  if (target && !target.store && this.harvest(target) === ERR_NOT_IN_RANGE) {
+    this.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
+  } else if (target && this.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+    this.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
+  }
 };
 
 Creep.prototype.getCurrentTarget = function() {
@@ -40,7 +68,15 @@ Creep.prototype.findFirstUniqueTarget = function() {
 };
 
 Creep.prototype.setNextUniqueTarget = function() {
+  this.updateTargets();
   const newTarget = this.findFirstUniqueTarget();
   this.updateTargets(newTarget);
   return newTarget;
+};
+
+Creep.prototype.setNextTarget = function() {
+  const targets = roles[this.memory.role].prioritizedTargets(this);
+  const target = targets.length ? targets[0] : null;
+  this.updateTargets(target);
+  return target;
 };

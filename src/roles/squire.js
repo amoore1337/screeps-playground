@@ -8,7 +8,7 @@ const squire = {
     }
     if (!creep.memory.refueling && creep.store[RESOURCE_ENERGY] === creep.store.getCapacity()) {
       // Before returning to work, check what you should be targeting:
-      checkForTarget(creep);
+      checkForTarget(creep, true);
 
       creep.memory.refueling = true;
       creep.say('⚡ refueling defenses');
@@ -16,11 +16,10 @@ const squire = {
 
     if (creep.memory.refueling) {
       const [target, type] = currentOrNextTarget(creep);
-
       if (target) {
         if (type === STRUCTURE_TOWER && creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
           creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
-        } else if (type === STRUCTURE_WALL && creep.repair(target) === ERR_NOT_IN_RANGE) {
+        } else if ([STRUCTURE_RAMPART, STRUCTURE_WALL].indexOf(type) > -1 && creep.repair(target) === ERR_NOT_IN_RANGE) {
           creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
         }
       } else {
@@ -28,33 +27,30 @@ const squire = {
         creep.memory.state = 'inactive';
       }
     } else {
-      let targets = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
-      targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
-      const target = creep.pos.findClosestByPath(targets);
-      if (target && target.energy && creep.harvest(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-      } else if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-      }
+      creep.fetchEnergy();
     }
   },
 
   prioritizedTargets: (creep) => {
-    const towers = _.filter(
+    let towers = _.filter(
       creep.room.find(FIND_STRUCTURES),
       (s) => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY),
     );
+    towers = _.sortBy(towers, (t) => t.store.getFreeCapacity(RESOURCE_ENERGY));
 
-    if (towers.length) {
-      return _.sortBy(towers, (t) => t.sore.getFreeCapacity(RESOURCE_ENERGY));
-    }
+    let ramparts = _.filter(
+      creep.room.find(FIND_STRUCTURES),
+      (s) => s.structureType === STRUCTURE_RAMPART && s.hits < 250000,
+    );
+    ramparts = _.sortBy(ramparts, (r) => (r.hits / r.hitsMax));
 
-    const walls = _.filter(
+    let walls = _.filter(
       creep.room.find(FIND_STRUCTURES),
       (s) => s.structureType === STRUCTURE_WALL && s.hitsMax > s.hits,
     );
+    walls = _.sortBy(walls, (w) => (w.hits / w.hitsMax));
 
-    return _.sortBy(walls, (w) => (w.hits / w.hitsMax));
+    return towers.concat(ramparts).concat(walls);
   },
 };
 
@@ -66,9 +62,9 @@ function currentOrNextTarget(creep) {
       if (currentTarget.store.getFreeCapacity() > 0) {
         return [currentTarget, STRUCTURE_TOWER];
       }
-    } else if (currentTarget.structureType === STRUCTURE_WALL) {
+    } else {
       if (currentTarget.hits < currentTarget.hitsMax) {
-        return [currentTarget, STRUCTURE_WALL];
+        return [currentTarget, currentTarget.structureType];
       }
     }
   }
@@ -78,19 +74,30 @@ function currentOrNextTarget(creep) {
 }
 
 // Determines when a new target should be selected:
-function checkForTarget(creep) {
+function checkForTarget(creep, tripCompleted) {
   let target = creep.getCurrentTarget();
+
+  // Build a padding in rampart health, don't stop repairing until over 20k hits:
+  if (target && target.structureType === STRUCTURE_RAMPART && target.hits < 300000) {
+    if (tripCompleted) {
+      creep.memory.targetTripCount++;
+    }
+    return target;
+  }
 
   // If you don't have a target, or you've already completed 2 trips to that target:
   if (!target || (creep.memory.targetTripCount && creep.memory.targetTripCount > 2)) {
-    target = creep.setNextUniqueTarget();
-    creep.memory.targetTripCount = target ? 1 : 0;
+    // Allow for swarming during war time:
+    const warZone = creep.room.find(FIND_HOSTILE_CREEPS).length > 0;
+    target = warZone ? creep.setNextTarget() : creep.setNextUniqueTarget();
+    const tripCount = target ? 1 : 0;
+    creep.memory.targetTripCount = tripCount;
     return target;
   }
 
   if (!creep.memory.targetTripCount) {
     creep.memory.targetTripCount = target ? 1 : 0;
-  } else {
+  } else if (tripCompleted) {
     creep.memory.targetTripCount++;
   }
 

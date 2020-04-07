@@ -16,15 +16,7 @@ const upgrader = {
         creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffffff' } });
       }
     } else {
-      let targets = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
-      targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
-
-      const target = creep.pos.findClosestByPath(targets);
-      if (target && target.energy && creep.harvest(target) == ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-      } else if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-        creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-      }
+      creep.fetchEnergy();
     }
   },
 };

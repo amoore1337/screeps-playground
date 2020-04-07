@@ -17,8 +17,8 @@ module.exports.loop = function() {
 };
 
 function moveTowers() {
-  const towers = _.filter(Game.structures, (s) => s.sourceType === STRUCTURE_TOWER);
-  for (const tower in towers) {
+  const towers = _.filter(Game.structures, (s) => s.structureType == STRUCTURE_TOWER);
+  for (const tower of towers) {
     tower.defend();
   }
 }

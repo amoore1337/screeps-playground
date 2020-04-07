@@ -15,50 +15,41 @@ const harvester = {
           creep.moveTo(tombstone, { visualizePathStyle: { stroke: '#ffaa00' } });
         }
       } else {
-        // Try to fill up from container if available:
-        let targets = _.filter(creep.room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
-        targets = _.filter(targets, (s) => s.store[RESOURCE_ENERGY] > 0);
-
-        // Look for a Storage structure:
-        if (!targets.length) {
-          targets = _.filter(
-            creep.room.find(FIND_STRUCTURES),
-            (s) => s.structureType === STRUCTURE_STORAGE && s.store.getFreeCapacity(),
-          );
-        }
-
-        // Fall back to energy deposits:
-        if (!targets.length) {
-          targets = _.filter(creep.room.find(FIND_SOURCES), (s) => s.energy > 0);
-        }
-
-        const target = creep.pos.findClosestByPath(targets);
-        if (target && target.energy && creep.harvest(target) === ERR_NOT_IN_RANGE) {
-          creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-        } else if (creep.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-          creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-        }
+        creep.fetchEnergy();
       }
     } else {
-      const targets = creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-          return (
-            structure.structureType == STRUCTURE_STORAGE ||
-            structure.structureType == STRUCTURE_EXTENSION ||
-            structure.structureType == STRUCTURE_SPAWN
-          ) && (
-            (!structure.storage && structure.energy < structure.energyCapacity) ||
-            (structure.storage && structure.storage.getFreeCapacity())
-          );
-        },
+      // Try to store in extensions first:
+      let targets = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => structure.structureType === STRUCTURE_EXTENSION && structure.energy < structure.energyCapacity,
       });
+
+      // If they're full, try the spawn:
+      if (!targets.length) {
+        targets = creep.room.find(FIND_STRUCTURES, {
+          filter: (structure) => structure.structureType === STRUCTURE_SPAWN && structure.energy < structure.energyCapacity,
+        });
+      }
+
+      // If that's full too, put it in storage:
+      if (!targets.length) {
+        targets = creep.room.find(FIND_STRUCTURES, {
+          filter: (structure) => structure.structureType === STRUCTURE_STORAGE && structure.store.getFreeCapacity(),
+        });
+      }
+
       if (targets.length > 0) {
         const transferResult = creep.transfer(targets[0], RESOURCE_ENERGY);
         if (transferResult == ERR_NOT_IN_RANGE) {
           creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
-        } else if (creep.memory.tripStartTime) {
-          recordHarvestTripTime(creep.room.find(FIND_MY_SPAWNS)[0], Game.time - creep.memory.tripStartTime);
-          creep.memory.tripStartTime = '';
+        } else if (transferResult === OK) {
+          const spawn = creep.room.find(FIND_MY_SPAWNS)[0];
+          if (spawn.memory.emergencyMode && spawn.isEnergyFull()) {
+            spawn.memory.emergencyMode = false;
+          }
+          if (creep.memory.tripStartTime) {
+            recordHarvestTripTime(spawn, Game.time - creep.memory.tripStartTime);
+            creep.memory.tripStartTime = '';
+          }
         }
       } else {
         creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
