@@ -2,22 +2,24 @@
 
 const harvester = {
   run: (creep) => {
-    if (creep.store[RESOURCE_ENERGY] < creep.store.getCapacity() && !creep.memory.tripStartTime) {
+    if (creep.memory.working && creep.store[RESOURCE_ENERGY] === 0) {
       creep.memory.tripStartTime = Game.time;
+      creep.memory.working = false;
+      creep.say('🔄 harvest');
+    }
+    if (!creep.memory.working && creep.store[RESOURCE_ENERGY] === creep.store.getCapacity()) {
+      // Before returning to work, check what you should be targeting:
+      // checkForTarget(creep, true);
+
+      creep.memory.working = true;
+      creep.say('delivering');
     }
 
-    if (creep.store[RESOURCE_ENERGY] < creep.store.getCapacity()) {
-      const tombstones = _.filter(creep.room.find(FIND_TOMBSTONES), (t) => t.store[RESOURCE_ENERGY]);
-      const tombstone = tombstones.length && tombstones[0];
+    // if (creep.store[RESOURCE_ENERGY] < 1 && !creep.memory.tripStartTime) {
+    //   creep.memory.tripStartTime = Game.time;
+    // }
 
-      if (tombstone) {
-        if (creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-          creep.moveTo(tombstone, { visualizePathStyle: { stroke: '#ffaa00' } });
-        }
-      } else {
-        creep.fetchEnergy();
-      }
-    } else {
+    if (creep.memory.working) {
       // Try to store in extensions first:
       let targets = creep.room.find(FIND_STRUCTURES, {
         filter: (structure) => structure.structureType === STRUCTURE_EXTENSION && structure.energy < structure.energyCapacity,
@@ -38,6 +40,10 @@ const harvester = {
       }
 
       if (targets.length > 0) {
+        if (targets[0].room.name !== creep.room.name) {
+          console.log('idk what happened...', targets[0]);
+          return;
+        }
         const transferResult = creep.transfer(targets[0], RESOURCE_ENERGY);
         if (transferResult == ERR_NOT_IN_RANGE) {
           creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
@@ -51,10 +57,17 @@ const harvester = {
             creep.memory.tripStartTime = '';
           }
         }
+      }
+    } else {
+      const tombstones = _.filter(creep.room.find(FIND_TOMBSTONES), (t) => t.store[RESOURCE_ENERGY]);
+      const tombstone = tombstones.length && tombstones[0];
+
+      if (tombstone) {
+        if (creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+          creep.moveTo(tombstone, { visualizePathStyle: { stroke: '#ffaa00' } });
+        }
       } else {
-        creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
-        creep.memory.state = 'inactive';
-        creep.memory.tripStartTime = '';
+        creep.fetchEnergy();
       }
     }
   },

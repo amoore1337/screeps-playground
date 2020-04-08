@@ -6,6 +6,7 @@ const roles = {
   squire: require('roles_squire'),
   upgrader: require('roles_upgrader'),
   defender: require('roles_defender'),
+  claimer: require('roles_claimer'),
 };
 
 Creep.prototype.runRole = function() {
@@ -32,9 +33,19 @@ Creep.prototype.fetchEnergy = function() {
   }
 
   const target = this.pos.findClosestByPath(targets);
+  if (target && target.room.name !== this.room.name) {
+    console.log('********* wtf!', target);
+    return;
+  }
   if (target && !target.store && this.harvest(target) === ERR_NOT_IN_RANGE) {
     this.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
+    // if (this.memory.role === 'harvester' && this.room.name === 'E27S13') {
+    //   console.log(this.name, ' ', this.room.name, ' moving to target ', target, ' in room ', target.room.name);
+    // }
   } else if (target && this.withdraw(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+    // if (this.memory.role === 'harvester' && this.room.name === 'E27S13') {
+    //   console.log(this.name, ' ', this.room.name, ' moving to target ', target, ' in room ', target.room.name);
+    // }
     this.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
   }
 };

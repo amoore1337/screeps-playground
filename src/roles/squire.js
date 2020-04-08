@@ -40,7 +40,7 @@ const squire = {
 
     let ramparts = _.filter(
       creep.room.find(FIND_STRUCTURES),
-      (s) => s.structureType === STRUCTURE_RAMPART && s.hits < 250000,
+      (s) => s.structureType === STRUCTURE_RAMPART && s.hits < 300000,
     );
     ramparts = _.sortBy(ramparts, (r) => (r.hits / r.hitsMax));
 
@@ -78,7 +78,7 @@ function checkForTarget(creep, tripCompleted) {
   let target = creep.getCurrentTarget();
 
   // Build a padding in rampart health, don't stop repairing until over 20k hits:
-  if (target && target.structureType === STRUCTURE_RAMPART && target.hits < 300000) {
+  if (target && target.structureType === STRUCTURE_RAMPART && target.hits < 400000) {
     if (tripCompleted) {
       creep.memory.targetTripCount++;
     }
