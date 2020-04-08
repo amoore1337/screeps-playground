@@ -10,7 +10,7 @@ const manager = {
     const maxEnergy = spawnIn.getTotalEnergyCapacity();
     if (maxEnergy <= 400) {
       return spawn([WORK, CARRY, MOVE], role, mem, spawnIn);
-    } else if (maxEnergy > 400 && maxEnergy <= 550) {
+    } else if (maxEnergy <= 550) {
       return spawn([WORK, CARRY, CARRY, MOVE, MOVE, MOVE], role, mem, spawnIn);
     } else {
       return spawn([WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE], role, mem, spawnIn);
@@ -37,8 +37,8 @@ const manager = {
   },
 };
 
-function creepName(role) {
-  return 'creep_' + role + Game.time;
+function creepName(role, roomName) {
+  return `creep_${roomName}_${role}_${Game.time}`;
 }
 
 function spawn(body, role, mem, spawnIn) {
@@ -52,7 +52,7 @@ function spawn(body, role, mem, spawnIn) {
     memory = _.merge(memory, mem);
   }
 
-  const spawnResult = spawnIn.spawnCreep(body, creepName(role), { memory });
+  const spawnResult = spawnIn.spawnCreep(body, creepName(role, spawnIn.room.name), { memory });
   if (spawnResult === OK) {
     console.log('[', spawnIn.name, '] Spawning ', role);
   }

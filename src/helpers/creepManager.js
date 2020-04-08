@@ -1,4 +1,5 @@
 const { spawns, spawnDynamicWorker, spawnBasicWorker, spawnMiner, spawnClaimer } = require('./helpers_spawnManager');
+const { availableRoles } = require('roles');
 
 const manager = {
   creepCountMap: creepCountMap,
@@ -39,6 +40,7 @@ const manager = {
       if (spawn.memory.claimRoom) {
         if (spawnClaimer({ target: spawn.memory.claimRoom }, spawn) === OK) {
           delete spawn.memory.claimRoom;
+          return;
         }
       }
 
@@ -54,13 +56,13 @@ const manager = {
           const creepsInRoom = creepCountMap(newRoom)[role];
           if (creepsInRoom < newColReqs[role]) {
             // This could be an expensive operation so nest it so its rarely called:
-            const creepsTravelingToRoom = _.filter(Game.creeps, (creep) =>{
+            const creepsTravelingToRoom = _.filter(Game.creeps, (creep) => {
               return creep && creep.memory.targetRoom === newRoom.name;
             });
             if (creepsTravelingToRoom + creepsInRoom < newColReqs[role]) {
               spawnBasicWorker(role, { targetRoom: newRoom.name }, spawn);
+              return;
             }
-            break;
           }
         }
       }
@@ -68,39 +70,15 @@ const manager = {
   },
 };
 
-function needsBuilder(room) {
-  return room.find(FIND_MY_CONSTRUCTION_SITES).length > 0;
-}
-
-// function needsRemoteBuilder(room, maxBuilders) {
-//   for (siteId in Game.constructionSites) {
-//     const site = Game.getObjectById(siteId);
-//     if (site.room.name !== room.name) {
-//       const buildersInRoom = creepCounter(site.room, 'builder');
-//       if (!site.room.find(FIND_MY_SPAWNS).length && buildersInRoom < maxBuilders) {
-//         return true;
-//       }
-//     }
-//   }
-//   return false;
-// }
-
 function missingMiners(room) {
   const containers = _.filter(room.find(FIND_STRUCTURES), (s) => s.structureType === STRUCTURE_CONTAINER);
   return containers.length > creepCountMap(room).miner;
 }
 
 function creepCountMap(room) {
-  return {
-    harvester: creepCounter(room, 'harvester'),
-    upgrader: creepCounter(room, 'upgrader'),
-    builder: creepCounter(room, 'builder'),
-    squire: creepCounter(room, 'squire'),
-    paver: creepCounter(room, 'paver'),
-    miner: creepCounter(room, 'miner'),
-    defender: creepCounter(room, 'defender'),
-    claimer: creepCounter(room, 'claimer'),
-  };
+  const countMap ={};
+  availableRoles.forEach((role) => countMap[role] = creepCounter(room, role));
+  return countMap;
 }
 
 function creepCounter(room, role) {
@@ -112,7 +90,7 @@ function creepCounter(room, role) {
 }
 
 function creepReq(spawn) {
-  const needBuilder = needsBuilder(spawn.room);
+  const needBuilder = spawn.room.find(FIND_MY_CONSTRUCTION_SITES).length > 0;
   const needsPaver = _.filter(
     spawn.room.find(FIND_STRUCTURES),
     (s) => [STRUCTURE_ROAD, STRUCTURE_CONTAINER].indexOf(s.structureType) > 0,
@@ -132,6 +110,7 @@ function creepReq(spawn) {
       builder: needBuilder ? 1 : 0,
     };
   }
+
   const maxEnergy = spawn.getTotalEnergyCapacity();
   if (maxEnergy <= 300) {
     return {
