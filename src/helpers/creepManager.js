@@ -16,12 +16,12 @@ const manager = {
 
       // FAILSAFE for not enough energy
       if (creepCountMap(spawn.room)['harvester'] < 1) {
-        spawnBasicWorker('harvester', {}, spawn);
+        spawnBasicWorker('harvester', { targetRoom: spawn.room.name }, spawn);
         return;
       }
 
       if (missingMiners(spawn.room)) {
-        spawnMiner({}, spawn);
+        spawnMiner({ targetRoom: spawn.room.name }, spawn);
         return;
       }
 
@@ -31,7 +31,7 @@ const manager = {
         const role = _.keys(creepRequests)[i];
         if (creepCountMap(spawn.room)[role] < creepRequests[role]) {
           const spawnMethod = spawn.memory.emergencyMode ? spawnBasicWorker : spawnDynamicWorker;
-          spawnMethod(role, {}, spawn);
+          spawnMethod(role, { targetRoom: spawn.room.name }, spawn);
           return;
         }
       }
@@ -58,7 +58,6 @@ const manager = {
               return creep && creep.memory.targetRoom === newRoom.name;
             });
             if (creepsTravelingToRoom + creepsInRoom < newColReqs[role]) {
-              console.log('spawning for new colony');
               spawnBasicWorker(role, { targetRoom: newRoom.name }, spawn);
             }
             break;

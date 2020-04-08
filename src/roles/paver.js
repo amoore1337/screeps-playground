@@ -2,29 +2,36 @@
 
 const paver = {
   run: (creep) => {
-    if (creep.memory.repairing && creep.store[RESOURCE_ENERGY] === 0) {
-      creep.memory.repairing = false;
-      creep.say('🔄 harvest');
-    }
-    if (!creep.memory.repairing && creep.store[RESOURCE_ENERGY] === creep.store.getCapacity()) {
-      // Before returning to work, check what you should be targeting:
-      currentOrNextTarget(creep);
+    if (creep.memory.targetRoom && creep.memory.targetRoom !== creep.room.name) {
+      // find exit to target room
+      const exit = creep.room.findExitTo(creep.memory.targetRoom);
+      // move to exit
+      creep.moveTo(creep.pos.findClosestByRange(exit));
+    } else {
+      if (creep.memory.repairing && creep.store[RESOURCE_ENERGY] === 0) {
+        creep.memory.repairing = false;
+        creep.say('🔄 harvest');
+      }
+      if (!creep.memory.repairing && creep.store[RESOURCE_ENERGY] === creep.store.getCapacity()) {
+        // Before returning to work, check what you should be targeting:
+        currentOrNextTarget(creep);
 
-      creep.memory.repairing = true;
-      creep.say('🚧 pave');
-    }
+        creep.memory.repairing = true;
+        creep.say('🚧 pave');
+      }
 
-    if (creep.memory.repairing) {
-      const target = currentOrNextTarget(creep);
-      if (target) {
-        if (creep.repair(target) == ERR_NOT_IN_RANGE) {
-          creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+      if (creep.memory.repairing) {
+        const target = currentOrNextTarget(creep);
+        if (target) {
+          if (creep.repair(target) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+          }
+        } else {
+          creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
         }
       } else {
-        creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
+        creep.fetchEnergy();
       }
-    } else {
-      creep.fetchEnergy();
     }
   },
 

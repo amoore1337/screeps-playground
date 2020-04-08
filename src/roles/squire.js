@@ -2,32 +2,39 @@
 
 const squire = {
   run: (creep) => {
-    if (creep.memory.refueling && creep.store[RESOURCE_ENERGY] === 0) {
-      creep.memory.refueling = false;
-      creep.say('🔄 harvest');
-    }
-    if (!creep.memory.refueling && creep.store[RESOURCE_ENERGY] === creep.store.getCapacity()) {
-      // Before returning to work, check what you should be targeting:
-      checkForTarget(creep, true);
+    if (creep.memory.targetRoom && creep.memory.targetRoom !== creep.room.name) {
+      // find exit to target room
+      const exit = creep.room.findExitTo(creep.memory.targetRoom);
+      // move to exit
+      creep.moveTo(creep.pos.findClosestByRange(exit));
+    } else {
+      if (creep.memory.refueling && creep.store[RESOURCE_ENERGY] === 0) {
+        creep.memory.refueling = false;
+        creep.say('🔄 harvest');
+      }
+      if (!creep.memory.refueling && creep.store[RESOURCE_ENERGY] === creep.store.getCapacity()) {
+        // Before returning to work, check what you should be targeting:
+        checkForTarget(creep, true);
 
-      creep.memory.refueling = true;
-      creep.say('⚡ refueling defenses');
-    }
+        creep.memory.refueling = true;
+        creep.say('⚡ refueling defenses');
+      }
 
-    if (creep.memory.refueling) {
-      const [target, type] = currentOrNextTarget(creep);
-      if (target) {
-        if (type === STRUCTURE_TOWER && creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-          creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
-        } else if ([STRUCTURE_RAMPART, STRUCTURE_WALL].indexOf(type) > -1 && creep.repair(target) === ERR_NOT_IN_RANGE) {
-          creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+      if (creep.memory.refueling) {
+        const [target, type] = currentOrNextTarget(creep);
+        if (target) {
+          if (type === STRUCTURE_TOWER && creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+          } else if ([STRUCTURE_RAMPART, STRUCTURE_WALL].indexOf(type) > -1 && creep.repair(target) === ERR_NOT_IN_RANGE) {
+            creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+          }
+        } else {
+          creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
+          creep.memory.state = 'inactive';
         }
       } else {
-        creep.moveTo(creep.room.find(FIND_MY_SPAWNS)[0]);
-        creep.memory.state = 'inactive';
+        creep.fetchEnergy();
       }
-    } else {
-      creep.fetchEnergy();
     }
   },
 
@@ -40,7 +47,7 @@ const squire = {
 
     let ramparts = _.filter(
       creep.room.find(FIND_STRUCTURES),
-      (s) => s.structureType === STRUCTURE_RAMPART && s.hits < 300000,
+      (s) => s.structureType === STRUCTURE_RAMPART && s.hits < 400000,
     );
     ramparts = _.sortBy(ramparts, (r) => (r.hits / r.hitsMax));
 
@@ -78,7 +85,7 @@ function checkForTarget(creep, tripCompleted) {
   let target = creep.getCurrentTarget();
 
   // Build a padding in rampart health, don't stop repairing until over 20k hits:
-  if (target && target.structureType === STRUCTURE_RAMPART && target.hits < 400000) {
+  if (target && target.structureType === STRUCTURE_RAMPART && target.hits < 500000) {
     if (tripCompleted) {
       creep.memory.targetTripCount++;
     }
